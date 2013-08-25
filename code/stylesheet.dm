@@ -13,16 +13,12 @@ em						{font-style: normal;	font-weight: bold;}
 
 .prefix					{					font-weight: bold;}
 
-.ooc					{color: #002eb8;	font-weight: bold;}
+.ooc					{					font-weight: bold;}
 .adminobserverooc		{color: #0099cc;	font-weight: bold;}
 .adminooc				{color: #b82e00;	font-weight: bold;}
 
 .adminobserver			{color: #996600;	font-weight: bold;}
 .admin					{color: #386aff;	font-weight: bold;}
-
-.mod				{color: #735638;	font-weight: bold;}
-.modooc				{color: #184880;	font-weight: bold;}
-.adminmod			{color: #402A14;	font-weight: bold;}
 
 .name					{					font-weight: bold;}
 
@@ -30,9 +26,15 @@ em						{font-style: normal;	font-weight: bold;}
 .deadsay				{color: #5c00e6;}
 .radio					{color: #008000;}
 .deptradio				{color: #993399;}
-.comradio				{color: #885500;}
+.comradio				{color: #193A7A;}
 .syndradio				{color: #6D3F40;}
-.nukeradio				{color: #FF3300;}
+.centradio				{color: #5C5C8A;}
+
+.secradio				{color: #A30000;}
+.engradio				{color: #A66300;}
+.medradio				{color: #008160;}
+.sciradio				{color: #993399;}
+.supradio				{color: #5F4519;}
 
 .alert					{color: #ff0000;}
 h1.alert, h2.alert		{color: #000000;}
@@ -54,4 +56,14 @@ h1.alert, h2.alert		{color: #000000;}
 .alien					{color: #543354;}
 .newscaster				{color: #800000;}
 
+.mod					{color: #735638;	font-weight: bold;}
+.modooc					{color: #184880;	font-weight: bold;}
+.adminmod				{color: #402A14;	font-weight: bold;}
+.tajaran				{color: #803B56;}
+.skrell					{color: #00CED1;}
+.soghun					{color: #228B22;}
+.vox					{color: #AA00AA;}
+.say_quote				{font-family: Georgia, Verdana, sans-serif;}
+
+.interface				{color: #330033;}
 </style>"}

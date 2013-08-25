@@ -2,8 +2,9 @@
 	desc = "Autonomous Power Loader Unit. The workhorse of the exosuit world."
 	name = "APLU \"Ripley\""
 	icon_state = "ripley"
+	initial_icon = "ripley"
 	step_in = 6
-	max_temperature = 1000
+	max_temperature = 20000
 	health = 200
 	wreckage = /obj/effect/decal/mecha_wreckage/ripley
 	var/list/cargo = new
@@ -19,7 +20,8 @@
 	desc = "Standart APLU chassis was refitted with additional thermal protection and cistern."
 	name = "APLU \"Firefighter\""
 	icon_state = "firefighter"
-	max_temperature = 2500
+	initial_icon = "firefighter"
+	max_temperature = 65000
 	health = 250
 	lights_power = 8
 	damage_absorption = list("fire"=0.5,"bullet"=0.8,"bomb"=0.5)
@@ -58,12 +60,13 @@
 	//Attach hydrolic clamp
 	var/obj/item/mecha_parts/mecha_equipment/tool/hydraulic_clamp/HC = new /obj/item/mecha_parts/mecha_equipment/tool/hydraulic_clamp
 	HC.attach(src)
+	for(var/obj/item/mecha_parts/mecha_tracking/B in src.contents)//Deletes the beacon so it can't be found easily
+		del (B)
 
 /obj/mecha/working/ripley/Exit(atom/movable/O)
 	if(O in cargo)
 		return 0
 	return ..()
-
 
 /obj/mecha/working/ripley/Topic(href, href_list)
 	..()
@@ -107,6 +110,3 @@
 		step_rand(A)
 	..()
 	return
-
-
-

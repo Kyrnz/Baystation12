@@ -1,19 +1,22 @@
+var/bomb_set
+
 /obj/machinery/nuclearbomb
+	name = "\improper Nuclear Fission Explosive"
 	desc = "Uh oh. RUN!!!!"
-	name = "Nuclear Fission Explosive"
-	icon = 'stationobjs.dmi'
+	icon = 'icons/obj/stationobjs.dmi'
 	icon_state = "nuclearbomb0"
 	density = 1
 	var/deployable = 0.0
 	var/extended = 0.0
-	var/timeleft = 1200
-	var/time_actual = 0
+	var/timeleft = 60.0
 	var/timing = 0.0
 	var/r_code = "ADMIN"
 	var/code = ""
 	var/yes_code = 0.0
 	var/safety = 1.0
 	var/obj/item/weapon/disk/nuclear/auth = null
+	var/removal_stage = 0 // 0 is no removal, 1 is covers removed, 2 is covers open,
+	                      // 3 is sealant open, 4 is unwrenched, 5 is removed from bolts.
 	flags = FPRINT
 	use_power = 0
 
@@ -23,35 +26,111 @@
 
 /obj/machinery/nuclearbomb/process()
 	if (src.timing)
-		if((time_actual <= world.timeofday) && ((world.timeofday + (time_actual - world.timeofday)) <= 864000) )
+		bomb_set = 1 //So long as there is one nuke timing, it means one nuke is armed.
+		src.timeleft--
+		if (src.timeleft <= 0)
 			explode()
 		for(var/mob/M in viewers(1, src))
 			if ((M.client && M.machine == src))
 				src.attack_hand(M)
 	return
 
+/obj/machinery/nuclearbomb/attackby(obj/item/weapon/O as obj, mob/user as mob)
+	if (src.extended)
+		if (istype(O, /obj/item/weapon/disk/nuclear))
+			usr.drop_item()
+			O.loc = src
+			src.auth = O
+			src.add_fingerprint(user)
+			return
+
+	if (src.anchored)
+		switch(removal_stage)
+			if(0)
+				if(istype(O,/obj/item/weapon/weldingtool))
+
+					var/obj/item/weapon/weldingtool/WT = O
+					if(!WT.isOn()) return
+					if (WT.get_fuel() < 5) // uses up 5 fuel.
+						user << "\red You need more fuel to complete this task."
+						return
+
+					user.visible_message("[user] starts cutting loose the anchoring bolt covers on [src].", "You start cutting loose the anchoring bolt covers with [O]...")
+
+					if(do_after(user,40))
+						if(!src || !user || !WT.remove_fuel(5, user)) return
+						user.visible_message("[user] cuts through the bolt covers on [src].", "You cut through the bolt cover.")
+						removal_stage = 1
+				return
+
+			if(1)
+				if(istype(O,/obj/item/weapon/crowbar))
+					user.visible_message("[user] starts forcing open the bolt covers on [src].", "You start forcing open the anchoring bolt covers with [O]...")
+
+					if(do_after(user,15))
+						if(!src || !user) return
+						user.visible_message("[user] forces open the bolt covers on [src].", "You force open the bolt covers.")
+						removal_stage = 2
+				return
+
+			if(2)
+				if(istype(O,/obj/item/weapon/weldingtool))
+
+					var/obj/item/weapon/weldingtool/WT = O
+					if(!WT.isOn()) return
+					if (WT.get_fuel() < 5) // uses up 5 fuel.
+						user << "\red You need more fuel to complete this task."
+						return
+
+					user.visible_message("[user] starts cutting apart the anchoring system sealant on [src].", "You start cutting apart the anchoring system's sealant with [O]...")
+
+					if(do_after(user,40))
+						if(!src || !user || !WT.remove_fuel(5, user)) return
+						user.visible_message("[user] cuts apart the anchoring system sealant on [src].", "You cut apart the anchoring system's sealant.")
+						removal_stage = 3
+				return
+
+			if(3)
+				if(istype(O,/obj/item/weapon/wrench))
+
+					user.visible_message("[user] begins unwrenching the anchoring bolts on [src].", "You begin unwrenching the anchoring bolts...")
+
+					if(do_after(user,50))
+						if(!src || !user) return
+						user.visible_message("[user] unwrenches the anchoring bolts on [src].", "You unwrench the anchoring bolts.")
+						removal_stage = 4
+				return
+
+			if(4)
+				if(istype(O,/obj/item/weapon/crowbar))
+
+					user.visible_message("[user] begins lifting [src] off of the anchors.", "You begin lifting the device off the anchors...")
+
+					if(do_after(user,80))
+						if(!src || !user) return
+						user.visible_message("[user] crowbars [src] off of the anchors. It can now be moved.", "You jam the crowbar under the nuclear device and lift it off its anchors. You can now move it!")
+						anchored = 0
+						removal_stage = 5
+				return
+	..()
+
 /obj/machinery/nuclearbomb/attack_paw(mob/user as mob)
 	return src.attack_hand(user)
 
 /obj/machinery/nuclearbomb/attack_hand(mob/user as mob)
 	if (src.extended)
-		var/time_left = time2text(time_actual-world.timeofday, "mm:ss")
-		if(world.timeofday + (time_actual - world.timeofday) >= 864000)
-			time_left = time2text(time_actual-(864000 - world.timeofday), "mm:ss")
-		if(!timing)
-			time_left = time2text(timeleft, "mm:ss")
-		user.machine = src
+		user.set_machine(src)
 		var/dat = text("<TT><B>Nuclear Fission Explosive</B><BR>\nAuth. Disk: <A href='?src=\ref[];auth=1'>[]</A><HR>", src, (src.auth ? "++++++++++" : "----------"))
 		if (src.auth)
 			if (src.yes_code)
-				dat += text("\n<B>Status</B>: []-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] <A href='?src=\ref[];timer=1'>Toggle</A><BR>\nTime: <A href='?src=\ref[];time=-60'>-</A><A href='?src=\ref[];time=-10'>-</A><A href='?src=\ref[];time=-1'>-</A> [] <A href='?src=\ref[];time=1'>+</A><A href='?src=\ref[];time=10'>+</A><A href='?src=\ref[];time=60'>+</A><BR>\n<BR>\nSafety: [] <A href='?src=\ref[];safety=1'>Toggle</A><BR>\nAnchor: [] <A href='?src=\ref[];anchor=1'>Toggle</A><BR>\n", (src.timing ? "Func/Set" : "Functional"), (src.safety ? "Safe" : "Engaged"), time_left, (src.timing ? "On" : "Off"), src, src, src, src, time_left, src, src, src, (src.safety ? "On" : "Off"), src, (src.anchored ? "Engaged" : "Off"), src)
+				dat += text("\n<B>Status</B>: []-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] <A href='?src=\ref[];timer=1'>Toggle</A><BR>\nTime: <A href='?src=\ref[];time=-10'>-</A> <A href='?src=\ref[];time=-1'>-</A> [] <A href='?src=\ref[];time=1'>+</A> <A href='?src=\ref[];time=10'>+</A><BR>\n<BR>\nSafety: [] <A href='?src=\ref[];safety=1'>Toggle</A><BR>\nAnchor: [] <A href='?src=\ref[];anchor=1'>Toggle</A><BR>\n", (src.timing ? "Func/Set" : "Functional"), (src.safety ? "Safe" : "Engaged"), src.timeleft, (src.timing ? "On" : "Off"), src, src, src, src.timeleft, src, src, (src.safety ? "On" : "Off"), src, (src.anchored ? "Engaged" : "Off"), src)
 			else
-				dat += text("\n<B>Status</B>: Auth. S2-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: --- [] +++<BR>\n<BR>\n[] Safety: Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), time_left, (src.timing ? "On" : "Off"), time_left, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
+				dat += text("\n<B>Status</B>: Auth. S2-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: - - [] + +<BR>\n<BR>\n[] Safety: Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), src.timeleft, (src.timing ? "On" : "Off"), src.timeleft, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
 		else
 			if (src.timing)
-				dat += text("\n<B>Status</B>: Set-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: --- [] +++<BR>\n<BR>\nSafety: [] Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), time_left, (src.timing ? "On" : "Off"), time_left, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
+				dat += text("\n<B>Status</B>: Set-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: - - [] + +<BR>\n<BR>\nSafety: [] Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), src.timeleft, (src.timing ? "On" : "Off"), src.timeleft, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
 			else
-				dat += text("\n<B>Status</B>: Auth. S1-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: --- [] +++<BR>\n<BR>\nSafety: [] Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), time_left, (src.timing ? "On" : "Off"), time_left, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
+				dat += text("\n<B>Status</B>: Auth. S1-[]<BR>\n<B>Timer</B>: []<BR>\n<BR>\nTimer: [] Toggle<BR>\nTime: - - [] + +<BR>\n<BR>\nSafety: [] Toggle<BR>\nAnchor: [] Toggle<BR>\n", (src.safety ? "Safe" : "Engaged"), src.timeleft, (src.timing ? "On" : "Off"), src.timeleft, (src.safety ? "On" : "Off"), (src.anchored ? "Engaged" : "Off"))
 		var/message = "AUTH"
 		if (src.auth)
 			message = text("[]", src.code)
@@ -61,7 +140,11 @@
 		user << browse(dat, "window=nuclearbomb;size=300x400")
 		onclose(user, "nuclearbomb")
 	else if (src.deployable)
-		src.anchored = 1
+		if(removal_stage < 5)
+			src.anchored = 1
+			visible_message("\red With a steely snap, bolts slide out of [src] and anchor it to the flooring!")
+		else
+			visible_message("\red \The [src] makes a highly unpleasant crunching noise. It looks like the anchoring bolts have been cut.")
 		flick("nuclearbombc", src)
 		src.icon_state = "nuclearbomb1"
 		src.extended = 1
@@ -73,8 +156,10 @@
 	set src in oview(1)
 
 	if (src.deployable)
+		usr << "\red You close several panels to make [src] undeployable."
 		src.deployable = 0
 	else
+		usr << "\red You adjust some panels to make [src] deployable."
 		src.deployable = 1
 
 /obj/machinery/nuclearbomb/Topic(href, href_list)
@@ -85,14 +170,14 @@
 		usr << "\red You don't have the dexterity to do this!"
 		return 1
 	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))))
-		usr.machine = src
+		usr.set_machine(src)
 		if (href_list["auth"])
 			if (src.auth)
 				src.auth.loc = src.loc
 				src.yes_code = 0
 				src.auth = null
 			else
-				var/obj/item/I = usr.equipped()
+				var/obj/item/I = usr.get_active_hand()
 				if (istype(I, /obj/item/weapon/disk/nuclear))
 					usr.drop_item()
 					I.loc = src
@@ -116,28 +201,42 @@
 			if (src.yes_code)
 				if (href_list["time"])
 					var/time = text2num(href_list["time"])
-					timeleft = min(max(time + (timeleft/10), 120), 900) * 10
+					src.timeleft += time
+					src.timeleft = min(max(round(src.timeleft), 60), 600)
 				if (href_list["timer"])
-					if (timing == -1.0)
+					if (src.timing == -1.0)
 						return
-					timing = !( timing )
-					if (timing)
-						time_actual = world.timeofday + timeleft
-						if(time_actual >= 864000)
-							time_actual -= 864000
+					if (src.safety)
+						usr << "\red The safety is still on."
+						return
+					src.timing = !( src.timing )
+					if (src.timing)
 						src.icon_state = "nuclearbomb2"
 						if(!src.safety)
 							bomb_set = 1//There can still be issues with this reseting when there are multiple bombs. Not a big deal tho for Nuke/N
+						else
+							bomb_set = 0
 					else
-						timeleft = time_actual - world.timeofday
-						if(timeleft < 0)
-							timeleft += 864000
 						src.icon_state = "nuclearbomb1"
 						bomb_set = 0
 				if (href_list["safety"])
 					src.safety = !( src.safety )
+					if(safety)
+						src.timing = 0
+						bomb_set = 0
 				if (href_list["anchor"])
+
+					if(removal_stage == 5)
+						src.anchored = 0
+						visible_message("\red \The [src] makes a highly unpleasant crunching noise. It looks like the anchoring bolts have been cut.")
+						return
+
 					src.anchored = !( src.anchored )
+					if(src.anchored)
+						visible_message("\red With a steely snap, bolts slide out of [src] and anchor it to the flooring.")
+					else
+						visible_message("\red The anchoring bolts slide back into the depths of [src].")
+
 		src.add_fingerprint(usr)
 		for(var/mob/M in viewers(1, src))
 			if ((M.client && M.machine == src))
@@ -163,13 +262,12 @@
 /obj/machinery/nuclearbomb/proc/explode()
 	if (src.safety)
 		src.timing = 0
-		timeleft = 0
 		return
 	src.timing = -1.0
 	src.yes_code = 0
 	src.safety = 1
 	src.icon_state = "nuclearbomb3"
-	playsound(src,'Alarm.ogg',100,0,5)
+	playsound(src,'sound/machines/Alarm.ogg',100,0,5)
 	if (ticker && ticker.mode)
 		ticker.mode.explosion_in_progress = 1
 	sleep(100)
@@ -184,9 +282,11 @@
 	else
 		off_station = 2
 
-	if (ticker)
+	if(ticker)
 		if(ticker.mode && ticker.mode.name == "nuclear emergency")
-			ticker.mode:herp = syndicate_station_at_station
+			var/obj/machinery/computer/syndicate_station/syndie_location = locate(/obj/machinery/computer/syndicate_station)
+			if(syndie_location)
+				ticker.mode:syndies_didnt_escape = (syndie_location.z > 1 ? 0 : 1)	//muskets will make me change this, but it will do for now
 			ticker.mode:nuke_off_station = off_station
 		ticker.station_explosion_cinematic(off_station,null)
 		if(ticker.mode)

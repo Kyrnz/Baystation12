@@ -10,7 +10,13 @@
 	w_class = 3
 	var/charges = 10
 	var/status = 0
+	var/mob/foundmob = "" //Used in throwing proc.
+
 	origin_tech = "combat=2"
+
+	suicide_act(mob/user)
+		viewers(user) << "\red <b>[user] is putting the live [src.name] in \his mouth! It looks like \he's trying to commit suicide.</b>"
+		return (FIRELOSS)
 
 /obj/item/weapon/melee/baton/update_icon()
 	if(status)
@@ -48,21 +54,13 @@
 		return
 
 	var/mob/living/carbon/human/H = M
-
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey]) (INTENT: [uppertext(user.a_intent)])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey]) (INTENT: [uppertext(user.a_intent)])</font>")
-
-	log_admin("ATTACK: [user] ([user.ckey]) attacked [M] ([M.ckey]) with [src].")
-	message_admins("ATTACK: [user] ([user.ckey]) attacked [M] ([M.ckey]) with [src].")
-	log_attack("<font color='red'>[user.name] ([user.ckey]) attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>")
-
 	if(isrobot(M))
 		..()
 		return
 
 	if(user.a_intent == "hurt")
 		if(!..()) return
-		H.apply_effect(5, WEAKEN, 0)
+		//H.apply_effect(5, WEAKEN, 0)
 		H.visible_message("<span class='danger'>[M] has been beaten with the [src] by [user]!</span>")
 		playsound(src.loc, "swing_hit", 50, 1, -1)
 	else if(!status)
@@ -82,12 +80,38 @@
 		else
 			charges--
 		H.visible_message("<span class='danger'>[M] has been stunned with the [src] by [user]!</span>")
-		playsound(src.loc, 'Egloves.ogg', 50, 1, -1)
+		user.attack_log += "\[[time_stamp()]\]<font color='red'> Stunned [H.name] ([H.ckey]) with [src.name]</font>"
+		H.attack_log += "\[[time_stamp()]\]<font color='orange'> Stunned by [user.name] ([user.ckey]) with [src.name]</font>"
+		log_attack("<font color='red'>[user.name] ([user.ckey]) stunned [H.name] ([H.ckey]) with [src.name]</font>" )
+
+		playsound(src.loc, 'sound/weapons/Egloves.ogg', 50, 1, -1)
 		if(charges < 1)
 			status = 0
 			update_icon()
 
 	add_fingerprint(user)
+
+/obj/item/weapon/melee/baton/throw_impact(atom/hit_atom)
+	if (prob(50))
+		if(istype(hit_atom, /mob/living))
+			var/mob/living/carbon/human/H = hit_atom
+			if(status)
+				H.apply_effect(10, STUN, 0)
+				H.apply_effect(10, WEAKEN, 0)
+				H.apply_effect(10, STUTTER, 0)
+				charges--
+
+				for(var/mob/M in player_list) if(M.key == src.fingerprintslast)
+					foundmob = M
+					break
+
+				H.visible_message("<span class='danger'>[src], thrown by [foundmob.name], strikes [H] and stuns them!</span>")
+
+				H.attack_log += "\[[time_stamp()]\]<font color='orange'> Stunned by thrown [src.name] (([src.fingerprintslast]))</font>"
+				log_attack("<font color='red'>Flying [src.name], thrown by ([src.fingerprintslast]) stunned [H.name] ([H.ckey])</font>" )
+
+				return
+	return ..()
 
 /obj/item/weapon/melee/baton/emp_act(severity)
 	switch(severity)

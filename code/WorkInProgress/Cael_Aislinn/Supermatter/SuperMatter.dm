@@ -26,9 +26,6 @@
 	density = 1
 	anchored = 0
 
-	LuminosityRed = 4
-	LuminosityGreen = 6
-
 	var/gasefficency = 0.25
 
 	var/base_icon_state = "darkmatter"
@@ -86,13 +83,13 @@
 			if((world.timeofday - lastwarning) / 10 >= WARNING_DELAY)
 
 				if(damage > emergency_point)
-					radioalert("states, \"[emergency_alert]\"","Supermatter Monitor")
+					//radioalert("states, \"[emergency_alert]\"","Supermatter Monitor")
 					lastwarning = world.timeofday
 				else if(damage >= damage_archived)   // The damage is still going up
-					radioalert("states, \"[warning_alert]\"","Supermatter Monitor")
+					//radioalert("states, \"[warning_alert]\"","Supermatter Monitor")
 					lastwarning = world.timeofday-150
 				else						  // Phew, we're safe
-					radioalert("states, \"[safe_alert]\"","Supermatter Monitor")
+					//radioalert("states, \"[safe_alert]\"","Supermatter Monitor")
 					lastwarning = world.timeofday
 
 			if(damage > explosion_point)
@@ -100,7 +97,7 @@
 				del src
 
 		damage_archived = damage
-		damage = max( damage + ( (removed.temperature - 1000) / 150 ) , 0 )
+		damage = max( damage + ( (removed.temperature - 800) / 150 ) , 0 )
 
 		if(!removed.total_moles)
 			damage += max((power-1600)/10,0)
@@ -174,7 +171,6 @@
 
 		for(var/mob/living/carbon/human/l in view(src, round(hallucination_energy**0.25))) // you have to be seeing the core to get hallucinations
 			if(prob(10) && !istype(l.glasses, /obj/item/clothing/glasses/meson))
-				world << "Inducing hallucinations"
 				l.hallucination += hallucination_energy/((get_dist(l,src)**2))
 
 		for(var/mob/living/l in range(src,round(rad_energy**0.25)))

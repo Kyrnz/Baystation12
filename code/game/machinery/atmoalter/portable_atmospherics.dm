@@ -1,5 +1,6 @@
 /obj/machinery/portable_atmospherics
 	name = "atmoalter"
+	use_power = 0
 	var/datum/gas_mixture/air_contents = new
 
 	var/obj/machinery/atmospherics/portables_connector/connected_port
@@ -15,10 +16,17 @@
 
 		air_contents.volume = volume
 		air_contents.temperature = T20C
-		air_contents.update_values()
 
 		return 1
 
+	initialize()
+		. = ..()
+		spawn()
+			var/obj/machinery/atmospherics/portables_connector/port = locate() in loc
+			if(port)
+				connect(port)
+				update_icon()
+	
 	process()
 		if(!connected_port) //only react when pipe_network will ont it do it for you
 			//Allow for reactions
@@ -106,12 +114,11 @@
 				user << "\blue Nothing happens."
 				return
 
-	else if ((istype(W, /obj/item/device/analyzer) || (istype(W, /obj/item/device/pda))) && get_dist(user, src) <= 1)
-		for (var/mob/O in viewers(user, null))
-			O << "\red [user] has used [W] on \icon[icon]"
+	else if ((istype(W, /obj/item/device/analyzer)) && get_dist(user, src) <= 1)
+		visible_message("\red [user] has used [W] on \icon[icon]")
 		if(air_contents)
 			var/pressure = air_contents.return_pressure()
-			var/total_moles = air_contents.total_moles
+			var/total_moles = air_contents.total_moles()
 
 			user << "\blue Results of analysis of \icon[icon]"
 			if (total_moles>0)

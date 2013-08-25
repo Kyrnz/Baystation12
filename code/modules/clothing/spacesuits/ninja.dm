@@ -1,13 +1,11 @@
-//This file was auto-corrected by findeclaration.exe on 29/05/2012 15:03:05
-
 /obj/item/clothing/head/helmet/space/space_ninja
 	desc = "What may appear to be a simple black garment is in fact a highly sophisticated nano-weave helmet. Standard issue ninja gear."
 	name = "ninja hood"
 	icon_state = "s-ninja"
 	item_state = "s-ninja_mask"
-	see_face = 1
 	allowed = list(/obj/item/weapon/cell)
 	armor = list(melee = 60, bullet = 50, laser = 30,energy = 15, bomb = 30, bio = 30, rad = 25)
+	siemens_coefficient = 0.2
 
 
 /obj/item/clothing/suit/space/space_ninja
@@ -16,9 +14,9 @@
 	icon_state = "s-ninja"
 	item_state = "s-ninja_suit"
 	allowed = list(/obj/item/weapon/gun,/obj/item/ammo_magazine,/obj/item/ammo_casing,/obj/item/weapon/melee/baton,/obj/item/weapon/handcuffs,/obj/item/weapon/tank/emergency_oxygen,/obj/item/weapon/cell)
-	protective_temperature = 5000
 	slowdown = 0
 	armor = list(melee = 60, bullet = 50, laser = 30,energy = 15, bomb = 30, bio = 30, rad = 30)
+	siemens_coefficient = 0.2
 
 		//Important parts of the suit.
 	var/mob/living/carbon/affecting = null//The wearer.

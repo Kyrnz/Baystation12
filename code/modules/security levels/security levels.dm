@@ -24,10 +24,10 @@
 				world << "<font size=4 color='red'>Attention! Security level lowered to green</font>"
 				world << "<font color='red'>[config.alert_desc_green]</font>"
 				security_level = SEC_LEVEL_GREEN
-				for(var/obj/machinery/firealarm/FA in world)
+				for(var/obj/machinery/firealarm/FA in machines)
 					if(FA.z == 1)
 						FA.overlays = list()
-						FA.overlays += image('monitors.dmi', "overlay_green")
+						FA.overlays += image('icons/obj/monitors.dmi', "overlay_green")
 			if(SEC_LEVEL_BLUE)
 				if(security_level < SEC_LEVEL_BLUE)
 					world << "<font size=4 color='red'>Attention! Security level elevated to blue</font>"
@@ -36,10 +36,10 @@
 					world << "<font size=4 color='red'>Attention! Security level lowered to blue</font>"
 					world << "<font color='red'>[config.alert_desc_blue_downto]</font>"
 				security_level = SEC_LEVEL_BLUE
-				for(var/obj/machinery/firealarm/FA in world)
+				for(var/obj/machinery/firealarm/FA in machines)
 					if(FA.z == 1)
 						FA.overlays = list()
-						FA.overlays += image('monitors.dmi', "overlay_blue")
+						FA.overlays += image('icons/obj/monitors.dmi', "overlay_blue")
 			if(SEC_LEVEL_RED)
 				if(security_level < SEC_LEVEL_RED)
 					world << "<font size=4 color='red'>Attention! Code red!</font>"
@@ -54,23 +54,19 @@
 				if(CC)
 					CC.post_status("alert", "redalert")*/
 
-				for(var/obj/machinery/firealarm/FA in world)
+				for(var/obj/machinery/firealarm/FA in machines)
 					if(FA.z == 1)
 						FA.overlays = list()
-						FA.overlays += image('monitors.dmi', "overlay_red")
+						FA.overlays += image('icons/obj/monitors.dmi', "overlay_red")
 
-				// trigger a response team
-				spawn
-					sleep(100)
-					if(security_level == SEC_LEVEL_RED) trigger_armed_response_team()
 			if(SEC_LEVEL_DELTA)
 				world << "<font size=4 color='red'>Attention! Delta security level reached!</font>"
 				world << "<font color='red'>[config.alert_desc_delta]</font>"
 				security_level = SEC_LEVEL_DELTA
-				for(var/obj/machinery/firealarm/FA in world)
+				for(var/obj/machinery/firealarm/FA in machines)
 					if(FA.z == 1)
 						FA.overlays = list()
-						FA.overlays += image('monitors.dmi', "overlay_delta")
+						FA.overlays += image('icons/obj/monitors.dmi', "overlay_delta")
 	else
 		return
 

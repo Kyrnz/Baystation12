@@ -5,9 +5,29 @@
 		var/t1 = findtext(act, "-", 1, null)
 		param = copytext(act, t1 + 1, length(act) + 1)
 		act = copytext(act, 1, t1)
+
+	if(findtext(act,"s",-1) && !findtext(act,"_",-2))//Removes ending s's unless they are prefixed with a '_'
+		act = copytext(act,1,length(act))
 	var/muzzled = istype(src.wear_mask, /obj/item/clothing/mask/muzzle)
 
 	switch(act)
+		if ("me")
+			if(silent)
+				return
+			if (src.client)
+				if (client.prefs.muted & MUTE_IC)
+					src << "\red You cannot send IC messages (muted)."
+					return
+				if (src.client.handle_spam_prevention(message,MUTE_IC))
+					return
+			if (stat)
+				return
+			if(!(message))
+				return
+			return custom_emote(m_type, message)
+
+		if ("custom")
+			return custom_emote(m_type, message)
 		if("sign")
 			if (!src.restrained())
 				message = text("<B>The alien</B> signs[].", (text2num(param) ? text(" the number []", text2num(param)) : null))
@@ -83,34 +103,19 @@
 		if("jump")
 			message = "<B>The [src.name]</B> jumps!"
 			m_type = 1
+		if("hiss_")
+			message = "<B>The [src.name]</B> hisses softly."
+			m_type = 1
 		if("collapse")
 			Paralyse(2)
 			message = text("<B>[]</B> collapses!", src)
 			m_type = 2
-		if ("me")
-			if(silent)
-				return
-			if (src.client && (client.muted || client.muted_complete))
-				src << "You are muted."
-				return
-			if (stat)
-				return
-			if(!(message))
-				return
-			else
-				if(cmptext(copytext(message, 1, 3), "v "))
-					message = "<B>[src]</B> [copytext(message, 3)]"
-					m_type = 1
-				else if(cmptext(copytext(message, 1, 3), "h "))
-					message = "<B>[src]</B> [copytext(message, 3)]"
-					m_type = 2
-				else
-					message = "<B>[src]</B> [message]"
 		if("help")
 			src << "burp, choke, collapse, dance, drool, gasp, shiver, gnarl, jump, moan, nod, roll, scratch,\nscretch, shake, sign-#, sulk, sway, tail, twitch, whimper"
 		else
 			src << text("Invalid Emote: []", act)
 	if ((message && src.stat == 0))
+		log_emote("[name]/[key] : [message]")
 		if (m_type & 1)
 			for(var/mob/O in viewers(src, null))
 				O.show_message(message, m_type)
